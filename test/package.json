@@ -1,0 +1,15 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "tests ",
+  "main": "test.js",
+  "scripts": {
+    "test": "mocha --testTimeout=5000"
+  },
+  "author": "oleg",
+  "license": "ISC",
+  "devDependencies": {
+    "@firebase/testing": "^0.20.5",
+    "mocha": "^8.0.1"
+  }
+}
