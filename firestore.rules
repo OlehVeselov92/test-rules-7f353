@@ -5,8 +5,18 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /readonly/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /users/{userId} {
       allow write: if (request.auth.uid == userId);
     }
+
+    match /posts/{postId} {
+      allow read: if (resource.data.visibility == "public") || (resource.data.authorId == request.auth.uid)
+    }
+     
   }
 }

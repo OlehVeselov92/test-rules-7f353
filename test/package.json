@@ -4,7 +4,7 @@
   "description": "tests ",
   "main": "test.js",
   "scripts": {
-    "test": "mocha --testTimeout=5000"
+    "test": "mocha --exit"
   },
   "author": "oleg",
   "license": "ISC",
