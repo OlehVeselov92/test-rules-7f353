@@ -1,3 +1,4 @@
+// Rules from tutorial 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -20,3 +21,55 @@ service cloud.firestore {
      
   }
 }
+
+
+// additional rules from codelab
+
+// rules_version = '2';
+// service cloud.firestore {
+//   match /databases/{database}/documents {
+//     match /carts/{cartID} {
+//       allow create: if request.auth.uid == request.resource.data.ownerUID;
+//       allow read, update, delete: if request.auth.uid == resource.data.ownerUID;
+//     }
+
+//     match /carts/{cartID}/items/{itemID} {
+//         allow read, write: if 
+//         get(/databases/$(database)/documents/carts/$(cartID))
+//         .data.ownerUID == request.auth.uid;
+//     }
+//     }
+
+//   }
+// }
+
+
+// // Our  Lay Rules
+// service cloud.firestore {
+// match /databases/{database}/documents {
+// // Functions
+//     function isResourceChecked() {
+//       return (resource.data.profileVerified == true) && (resource.data.profileSubmitted == true);
+//   }
+//     function isSignedIn(userId) {
+//       return isAuthenticated() && (request.auth.uid == userId);
+//   }
+
+//   function isDocOwner() {
+//     return request.auth.uid == request.resource.data.uid;
+//   }
+//     function isAuthenticated() {
+//       return (request.auth != null);
+//   }
+//     function isAdmin() {
+//       return (request.auth != null) && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.admin == true);
+//   }
+//     match /users/{userId} {
+// //everobody, who is Authenticated can see checked profile if it is checked:
+//         allow read: if true;
+// // users can write their own data:
+//         allow update, delete: if true;
+//         allow create: if true;
+//     }
+//   }
+// }

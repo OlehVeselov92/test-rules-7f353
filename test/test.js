@@ -5,18 +5,21 @@ const MY_PROJECT_ID = 'test-rules-7f353';
 
 const myId = "p80vTK1RcHNsCEETahoONQc4EBh1";
 const theirId = "p80vTK1RcHNsCEETahoONQc4EBh2";
-const myAuth = {uid: myId, email: "oleg@gmail.com"};
+const myAuth = { uid: myId, email: "oleg@gmail.com" };
+
+
 
 function getFirestore(auth) {
-    return firebase.initializeTestApp({projectId: MY_PROJECT_ID, auth: auth}).firestore();
+    return firebase.initializeTestApp({ projectId: MY_PROJECT_ID, auth: auth }).firestore();
 }
 
 function getAdminFirestore() {
-    return firebase.initializeAdminApp({projectId: MY_PROJECT_ID}).firestore();
+    return firebase.initializeAdminApp({ projectId: MY_PROJECT_ID }).firestore();
 }
 
-beforeEach(async() =>{
-    await firebase.clearFirestoreData({projectId: MY_PROJECT_ID});
+beforeEach(async () => {
+    await firebase.clearFirestoreData({ projectId: MY_PROJECT_ID });
+    // вставил структуру 
 })
 
 describe("Our social app", () => {
@@ -24,7 +27,7 @@ describe("Our social app", () => {
         assert.equal(2 + 2, 4);
     })
 
-    it("Can read items in the read-only collection", async () => {
+    it("Can read items in the read-only collection", async () => {и 
         const db = getFirestore(null);
         const testDoc = db.collection("readonly").doc("testDoc");
         await firebase.assertSucceeds(testDoc.get());
@@ -45,43 +48,43 @@ describe("Our social app", () => {
     it("Can't write to a user document with the different ID as our user", async () => {
         const db = getFirestore(myAuth);
         const testDoc = db.collection("users").doc(theirId);
-        await firebase.assertFails(testDoc.set({foo: "bar"}));
+        await firebase.assertFails(testDoc.set({ foo: "bar" }));
     })
 
-    it("Can read posts marked public", async() => {
+    it("Can read posts marked public", async () => {
         const db = getFirestore(null);
         const testQuery = db.collection("posts").where("visibility", "==", "public");
         await firebase.assertSucceeds(testQuery.get());
     })
 
-    it("Can query personal posts", async() => {
+    it("Can query personal posts", async () => {
         const db = getFirestore(myAuth);
         const testQuery = db.collection("posts").where("authorId", "==", myId);
         await firebase.assertSucceeds(testQuery.get());
     })
 
-    it("Can't query all posts", async() => {
+    it("Can't query all posts", async () => {
         const db = getFirestore(myAuth);
         const testQuery = db.collection("posts");
         await firebase.assertFails(testQuery.get());
     })
 
-    it("Can read a single public post", async() => {
+    it("Can read a single public post", async () => {
         const admin = getAdminFirestore();
         const postId = "public_post"
         const setupDoc = admin.collection("posts").doc(postId);
-        await setupDoc.set({authorId: theirId, visibility: "public"});
+        await setupDoc.set({ authorId: theirId, visibility: "public" });
 
         const db = getFirestore(null);
         const testRead = db.collection("posts").doc(postId);
         await firebase.assertSucceeds(testRead.get());
     })
 
-    it("Can read a private post belonging to the user", async() => {
+    it("Can read a private post belonging to the user", async () => {
         const admin = getAdminFirestore();
         const postId = "private_post"
         const setupDoc = admin.collection("posts").doc(postId);
-        await setupDoc.set({authorId: myId, visibility: "private"});
+        await setupDoc.set({ authorId: myId, visibility: "private" });
 
         const db = getFirestore(myAuth);
         const testRead = db.collection("posts").doc(postId);
@@ -89,20 +92,44 @@ describe("Our social app", () => {
     })
 
 
-    it("Can't read a private post belonging to another user", async() => {
+    it("Can't read a private post belonging to another user", async () => {
         const admin = getAdminFirestore();
         const postId = "private_post"
         const setupDoc = admin.collection("posts").doc(postId);
-        await setupDoc.set({authorId: theirId, visibility: "private"});
+        await setupDoc.set({ authorId: theirId, visibility: "private" });
 
         const db = getFirestore(myAuth);
         const testRead = db.collection("posts").doc(postId);
         await firebase.assertFails(testRead.get());
     })
 
+    // additional tests from codelabs
 
+    // it('can be created by the cart owner', async () => {
+    //     await firebase.assertSucceeds(db.doc("carts/alicesCart").set({
+    //         ownerUID: "alice",
+    //         total: 0
+    //     }));
+    // })
+
+    // it("cart can be read by the cart owner", async () => {
+    //     await firebase.assertSucceeds(db.doc("carts/alicesCart").get());
+    // }).timeout(1000);
+    
+    
+    // it("items can be added by the cart owner", async () => {
+    //     await firebase.assertSucceeds(db.doc("carts/alicesCart/items/lemon").set({
+    //         name: "lemon",
+    //         price: .99
+    //     }));
+    // }).timeout(1000);
+    
+    // it("items can be read by the cart owner", async () => {
+    //     await firebase.assertSucceeds(db.doc("carts/alicesCart/items/milk").get());
+    // }).timeout(1000);
+    
 });
 
-after(async() =>{
-    await firebase.clearFirestoreData({projectId: MY_PROJECT_ID});
+after(async () => {
+    await firebase.clearFirestoreData({ projectId: MY_PROJECT_ID });
 })
