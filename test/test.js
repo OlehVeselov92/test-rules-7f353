@@ -19,7 +19,7 @@ function getAdminFirestore() {
 
 beforeEach(async () => {
     await firebase.clearFirestoreData({ projectId: MY_PROJECT_ID });
-    // вставил структуру 
+    
 })
 
 describe("Our social app", () => {
@@ -27,107 +27,66 @@ describe("Our social app", () => {
         assert.equal(2 + 2, 4);
     })
 
-    it("Can read items in the read-only collection", async () => {и 
-        const db = getFirestore(null);
-        const testDoc = db.collection("readonly").doc("testDoc");
-        await firebase.assertSucceeds(testDoc.get());
-    })
-
-    it("Can't write to items in the collection", async () => {
-        const db = getFirestore(null);
-        const testDoc = db.collection("readonly").doc("testDoc2");
-        await firebase.assertFails(testDoc.set({foo: "bar"}));
-    })
-
-    it('Can write to a user document with the same ID as our user', async () => {
+    it('Can write a user document with the same ID as our user', async () => {
         const db = getFirestore(myAuth);
         const testDoc = db.collection("users").doc(myId);
         await firebase.assertSucceeds(testDoc.set({foo: "bar"}));
     })
 
-    it("Can't write to a user document with the different ID as our user", async () => {
+    it("Can't  write a user document with the different ID as our user", async () => {
         const db = getFirestore(myAuth);
         const testDoc = db.collection("users").doc(theirId);
         await firebase.assertFails(testDoc.set({ foo: "bar" }));
     })
 
-    it("Can read posts marked public", async () => {
+    it("Can't write to  the user collection if is not signed in", async () => {
         const db = getFirestore(null);
-        const testQuery = db.collection("posts").where("visibility", "==", "public");
+        const testDoc = db.collection("users").doc("testDoc");
+        await firebase.assertFails(testDoc.set({foo: "bar"}));
+    })
+
+    it("Can read the usercollection if signedIn", async () => {
+        const db = getFirestore(myAuth);
+        const testDoc = db.collection("users").doc(myId);
+        await firebase.assertSucceeds(testDoc.get());
+    })
+
+    it("Can query submitted profile", async () => {
+        const db = getFirestore(null);
+        const testQuery = db.collection("users").where("profileSubmitted", "==", true);
         await firebase.assertSucceeds(testQuery.get());
     })
 
-    it("Can query personal posts", async () => {
-        const db = getFirestore(myAuth);
-        const testQuery = db.collection("posts").where("authorId", "==", myId);
-        await firebase.assertSucceeds(testQuery.get());
-    })
-
-    it("Can't query all posts", async () => {
-        const db = getFirestore(myAuth);
-        const testQuery = db.collection("posts");
+    it("Can't query unsubmitted profile", async () => {
+        const db = getFirestore(null);
+        const testQuery = db.collection("users").where("profileSubmitted", "==", false);
         await firebase.assertFails(testQuery.get());
     })
+    
+    it('can be created by the profile owner', async () => {
+        const db = getFirestore(myAuth);
+        const testDoc = db.collection("users").doc(myId);
+        await firebase.assertSucceeds(testDoc.set({
+            foo: "bar"
+        }));
+    })
 
-    it("Can read a single public post", async () => {
+    it("Can't query all profiles", async () => {
+        const db = getFirestore(myAuth);
+        const testQuery = db.collection("users");
+        await firebase.assertFails(testQuery.get());
+    })
+    
+    it("Can read a single submitted profile", async () => {
         const admin = getAdminFirestore();
-        const postId = "public_post"
-        const setupDoc = admin.collection("posts").doc(postId);
-        await setupDoc.set({ authorId: theirId, visibility: "public" });
+        const postId = theirId
+        const setupDoc = admin.collection("users").doc(theirId);
+        await setupDoc.set({ authorId: theirId, profileSubmitted: true });
 
         const db = getFirestore(null);
-        const testRead = db.collection("posts").doc(postId);
+        const testRead = db.collection("users").doc(postId);
         await firebase.assertSucceeds(testRead.get());
     })
-
-    it("Can read a private post belonging to the user", async () => {
-        const admin = getAdminFirestore();
-        const postId = "private_post"
-        const setupDoc = admin.collection("posts").doc(postId);
-        await setupDoc.set({ authorId: myId, visibility: "private" });
-
-        const db = getFirestore(myAuth);
-        const testRead = db.collection("posts").doc(postId);
-        await firebase.assertSucceeds(testRead.get());
-    })
-
-
-    it("Can't read a private post belonging to another user", async () => {
-        const admin = getAdminFirestore();
-        const postId = "private_post"
-        const setupDoc = admin.collection("posts").doc(postId);
-        await setupDoc.set({ authorId: theirId, visibility: "private" });
-
-        const db = getFirestore(myAuth);
-        const testRead = db.collection("posts").doc(postId);
-        await firebase.assertFails(testRead.get());
-    })
-
-    // additional tests from codelabs
-
-    // it('can be created by the cart owner', async () => {
-    //     await firebase.assertSucceeds(db.doc("carts/alicesCart").set({
-    //         ownerUID: "alice",
-    //         total: 0
-    //     }));
-    // })
-
-    // it("cart can be read by the cart owner", async () => {
-    //     await firebase.assertSucceeds(db.doc("carts/alicesCart").get());
-    // }).timeout(1000);
-    
-    
-    // it("items can be added by the cart owner", async () => {
-    //     await firebase.assertSucceeds(db.doc("carts/alicesCart/items/lemon").set({
-    //         name: "lemon",
-    //         price: .99
-    //     }));
-    // }).timeout(1000);
-    
-    // it("items can be read by the cart owner", async () => {
-    //     await firebase.assertSucceeds(db.doc("carts/alicesCart/items/milk").get());
-    // }).timeout(1000);
-    
 });
 
 after(async () => {
