@@ -27,6 +27,12 @@ describe("Our social app", () => {
         assert.equal(2 + 2, 4);
     })
 
+    it("Can't write to  the user collection if is not signed in", async () => {
+        const db = getFirestore(null);
+        const testDoc = db.collection("users").doc("testDoc");
+        await firebase.assertFails(testDoc.set({foo: "bar"}));
+            })
+
     it('Can write a user document with the same ID as our user', async () => {
         const db = getFirestore(myAuth);
         const testDoc = db.collection("users").doc(myId);
@@ -38,12 +44,7 @@ describe("Our social app", () => {
         const testDoc = db.collection("users").doc(theirId);
         await firebase.assertFails(testDoc.set({ foo: "bar" }));
     })
-
-    it("Can't write to  the user collection if is not signed in", async () => {
-        const db = getFirestore(null);
-        const testDoc = db.collection("users").doc("testDoc");
-        await firebase.assertFails(testDoc.set({foo: "bar"}));
-    })
+    
 
     it("Can read the usercollection if signedIn", async () => {
         const db = getFirestore(myAuth);
@@ -57,11 +58,18 @@ describe("Our social app", () => {
         await firebase.assertSucceeds(testQuery.get());
     })
 
-    it("Can't query unsubmitted profile", async () => {
+    it("Can't query unsubmitted profile if auth == null", async () => {
         const db = getFirestore(null);
         const testQuery = db.collection("users").where("profileSubmitted", "==", false);
         await firebase.assertFails(testQuery.get());
     })
+
+    it("Can't query other's unsubmitted profiles if myAuth", async () => {
+        const db = getFirestore(myAuth);
+        const testQuery = db.collection("users").where("profileSubmitted", "==", false);
+        await firebase.assertFails(testQuery.get());
+    })
+    
     
     it('can be created by the profile owner', async () => {
         const db = getFirestore(myAuth);
@@ -87,8 +95,22 @@ describe("Our social app", () => {
         const testRead = db.collection("users").doc(postId);
         await firebase.assertSucceeds(testRead.get());
     })
+
+        
+    it("Can query all submitted profile if signedIn", async () => {
+        const db = getFirestore(myAuth);
+        const testQuery = db.collection("users").where("profileSubmitted", "==", true);
+        await firebase.assertSucceeds(testQuery.get());
+    })
+
+    it("Can query all submitted profile if auth = null", async () => {
+        const db = getFirestore(null);
+        const testQuery = db.collection("users").where("profileSubmitted", "==", true);
+        await firebase.assertSucceeds(testQuery.get());
+    })
 });
 
 after(async () => {
     await firebase.clearFirestoreData({ projectId: MY_PROJECT_ID });
 })
+
