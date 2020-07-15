@@ -1,7 +1,63 @@
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if request.auth!=null;
-    }
+    // FUNCTIONS:
+  function isAuth() {
+  return request.auth != null;
+  }
+
+  function isCurrentUser(userId) {
+    return request.auth.uid == userId;
+  } 
+
+  function isPublic() {
+    return resource.metadata.visibility == 'public';
+  }
+
+  function lessThanNMegabytes(n) {
+    return request.resource.size < n * 1024 * 1024;
+  }
+
+  function isAdmin() {
+    return request.auth.token.admin == true;
+  }
+
+  function isResourceChecked() {
+  return resource.metadata.profileSubmitted == true;
+  }
+
+  function isImage() {
+  return request.resource.contentType.matches('image/.*');
+  }
+
+    // RULES:
+    match /{userId}/public/{anyUserFile=**} {
+      allow read: if 
+        isAuth()
+        && isPublic()
+        && isResourceChecked()
+        || isCurrentUser(userId)
+        || isAdmin();
+      
+      allow write: if 
+        isAdmin()
+        || isCurrentUser(userId)
+        && lessThanNMegabytes(6)
+        && isImage();
+      }
+  match /{userId}/private/{anyUserFile=**} {
+        allow read: if 
+        isAuth()
+        && isResourceChecked()
+        && // имеет доступ в приватную коллекцию
+        || isCurrentUser(userId)
+        || isAdmin();
+
+      allow write: if 
+      isAdmin()
+        || isCurrentUser(userId)
+        && lessThanNMegabytes(6)
+        && isImage();
+      }
   }
 }
+
